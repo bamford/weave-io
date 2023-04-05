@@ -7,7 +7,6 @@ import warnings
 import networkx as nx
 import pandas as pd
 from astropy.table import Table
-import timeout_decorator
 
 from .utilities import mask_infs, remove_successive_duplicate_lines, dtype_conversion
 from .digraph import HashedDiGraph, plot_graph, add_start, add_traversal, add_filter, add_aggregation, add_operation, add_return, add_unwind, subgraph_view, get_above_state_traversal_graph, node_dependencies, add_node_reference
