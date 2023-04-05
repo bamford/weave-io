@@ -22,7 +22,6 @@ class DeadEndException(Exception):
     pass
 
 
-@timeout_decorator.timeout(120)
 def traverse(graph, start=None, end=None, done=None, ordering=None, views=None):
     """
     traverse the traversal_graph with backtracking
