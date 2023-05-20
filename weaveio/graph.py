@@ -14,6 +14,9 @@ import pandas as pd
 from weaveio.context import ContextMeta
 from weaveio.writequery import CypherQuery
 
+logger = logging.getLogger(__name__)
+logger.setLevel('DEBUG')
+
 missing_types = {int:  np.inf, float: np.inf, str: '<MISSING>', type(None): np.inf, None: np.inf, bool: np.inf, datetime: datetime(1900, 1, 1, 0, 0)}
 convert_types = {bool: bool, np.bool: bool, np.bool_: bool, int:  int, float: float, str: str, type(None): float, None: float,
                  datetime: lambda x: datetime(x.year, x.month, x.day, x.hour, x.minute, x.second),
@@ -116,15 +119,33 @@ class Graph(metaclass=ContextMeta):
     def _execute(self, cypher, parameters, backoff=1, limit=10):
         if not isinstance(cypher, str):
             raise TypeError(f"Cypher must be a string")
-        return self.neograph.auto(readonly=not self.write_allowed).run(cypher, parameters=parameters)
+        try:
+            tx = self.neograph.begin(readonly=not self.write_allowed)
+            tx.update('MATCH (n) WHERE n._query_hash IS NOT NULL remove n._query_hash')
+            tx.update('MATCH ()-[r]-() WHERE r._query_hash IS NOT NULL remove r._query_hash')
+            result = tx.run(cypher, parameters=parameters)
+            tx.update('MATCH (n) WHERE n._query_hash IS NOT NULL remove n._query_hash')
+            tx.update('MATCH ()-[r]-() WHERE r._query_hash IS NOT NULL remove r._query_hash')
+        except:
+            tx.rollback()
+            raise
+        else:
+            tx.commit()
+        return result
 
     def execute(self, cypher, **payload):
         d = _convert_datatypes(payload, nan2missing=True, none2missing=True)
-        try:
-            return self._execute(cypher, d)
-        except IndexError:
-            raise ConnectionResetError(f"Py2neo dropped the connection because it was taking too long. "
-                                       f"Split up your query using batch_size=??")
+        tries = 0
+        while True:
+            try:
+                tries += 1
+                result = self._execute(cypher, d)
+                break
+            except py2neo.errors.TransientError:
+                logger.warning(f'py2neo TransientError, tries: {tries}')
+                if tries > 5:
+                    raise
+        return result
 
     def output_for_debug(self,  arrow=False, cmdline=False, silent=False, **payload):
         d = _convert_datatypes(payload, nan2missing=True, none2missing=True)

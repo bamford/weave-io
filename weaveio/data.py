@@ -649,8 +649,6 @@ class Data:
                 timed_out = False
                 if not dryrun:
                     try:
-                        self.graph.execute('MATCH (n) remove n._query_hash')
-                        self.graph.execute('MATCH ()-[r]-() remove r._query_hash')
                         results = self.graph.execute(cypher, **params)
                         stats.append(results.stats())
                         timestamp = results.evaluate()
@@ -675,9 +673,6 @@ class Data:
                                 raise ConnectionTimeOutError(f"Connection timed out whilst writing {path}{slc.start}:{slc.stop}:{part} and it failed") from e
                             else:
                                 raise ConnectionError(f"{path} could not be written to the database see neo4j logs for more details") from e
-                    finally:
-                        self.graph.execute('MATCH (n) remove n._query_hash')
-                        self.graph.execute('MATCH ()-[r]-() remove r._query_hash')
                     if timestamp is None:
                         logging.warning(f"This query terminated early due to either an empty input table/data or "
                                         f"a match within the query returned no matches or it timed-out. "
