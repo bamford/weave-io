@@ -141,8 +141,8 @@ class Graph(metaclass=ContextMeta):
                 tries += 1
                 result = self._execute(cypher, d)
                 break
-            except py2neo.errors.TransientError:
-                logger.warning(f'py2neo TransientError, tries: {tries}')
+            except (py2neo.errors.TransientError, py2neo.errors.ClientError):
+                logger.warning(f'py2neo error, tries: {tries}')
                 if tries > 5:
                     raise
         return result
