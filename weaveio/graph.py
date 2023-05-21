@@ -116,16 +116,18 @@ class Graph(metaclass=ContextMeta):
     def write(self, collision_manager):
         return CypherQuery(collision_manager)
 
-    def _execute(self, cypher, parameters, backoff=1, limit=10):
+    def _execute(self, cypher, parameters, backoff=1, limit=10, remove_query_hash=False):
         if not isinstance(cypher, str):
             raise TypeError(f"Cypher must be a string")
+        tx = self.neograph.begin(readonly=not self.write_allowed)
         try:
-            tx = self.neograph.begin(readonly=not self.write_allowed)
-            tx.update('MATCH (n) WHERE n._query_hash IS NOT NULL remove n._query_hash')
-            tx.update('MATCH ()-[r]-() WHERE r._query_hash IS NOT NULL remove r._query_hash')
+            if remove_query_hash:
+                tx.update('MATCH (n) WHERE n._query_hash IS NOT NULL remove n._query_hash')
+                tx.update('MATCH ()-[r]-() WHERE r._query_hash IS NOT NULL remove r._query_hash')
             result = tx.run(cypher, parameters=parameters)
-            tx.update('MATCH (n) WHERE n._query_hash IS NOT NULL remove n._query_hash')
-            tx.update('MATCH ()-[r]-() WHERE r._query_hash IS NOT NULL remove r._query_hash')
+            if remove_query_hash:
+                tx.update('MATCH (n) WHERE n._query_hash IS NOT NULL remove n._query_hash')
+                tx.update('MATCH ()-[r]-() WHERE r._query_hash IS NOT NULL remove r._query_hash')
         except:
             tx.rollback()
             raise
@@ -133,13 +135,13 @@ class Graph(metaclass=ContextMeta):
             tx.commit()
         return result
 
-    def execute(self, cypher, **payload):
+    def execute(self, cypher, remove_query_hash=False, **payload):
         d = _convert_datatypes(payload, nan2missing=True, none2missing=True)
         tries = 0
         while True:
             try:
                 tries += 1
-                result = self._execute(cypher, d)
+                result = self._execute(cypher, d, remove_query_hash=remove_query_hash)
                 break
             except (py2neo.errors.TransientError, py2neo.errors.ClientError):
                 logger.warning(f'py2neo error, tries: {tries}')

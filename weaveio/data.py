@@ -649,7 +649,7 @@ class Data:
                 timed_out = False
                 if not dryrun:
                     try:
-                        results = self.graph.execute(cypher, **params)
+                        results = self.graph.execute(cypher, remove_query_hash=True, **params)
                         stats.append(results.stats())
                         timestamp = results.evaluate()
                         successful = True
@@ -707,7 +707,7 @@ class Data:
             # df = pd.DataFrame(columns=['elapsed_time', 'fname', 'batch_start', 'batch_end', 'part'])
             # df['elapsed_time'] = elapsed_times
         else:
-            df = pd.DataFrame(columns=['timestamp', 'elapsed_time', 'fname', 'batch_start', 'batch_end'])
+            df = pd.DataFrame(columns=['timestamp', 'elapsed_time', 'fname', 'batch_start', 'batch_end', 'part'])
         if dryrun:
             return
         return df.set_index(['fname', 'batch_start', 'batch_end', 'part'])
