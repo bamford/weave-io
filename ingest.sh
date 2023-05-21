@@ -1,7 +1,7 @@
 #!/bin/sh -Tf
 #PBS -N WL-INGEST
 #PBS -l nodes=1
-#PBS -l walltime=06:00:00
+#PBS -l walltime=12:00:00
 #PBS -l pmem=6gb
 #PBS -k oe
 #PBS -j oe
