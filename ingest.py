@@ -32,7 +32,7 @@ def main(night):
         if len(fs) == 0:
             logger.info(f'No MOS files found')
         else:
-            data.write_files(*fs, timeout=10*60, debug=False, test_one=False, debug_time=False,
+            data.write_files(*fs, timeout=60*60, debug=False, test_one=False, debug_time=False,
                              debug_params=False, dryrun=False)
 
 
