@@ -144,9 +144,10 @@ class Graph(metaclass=ContextMeta):
                 result = self._execute(cypher, d, remove_query_hash=remove_query_hash)
                 break
             except (py2neo.errors.TransientError, py2neo.errors.ClientError):
-                logger.warning(f'py2neo error, tries: {tries}')
                 if tries > 5:
                     raise
+                logger.warning(f'py2neo error, tries: {tries}')
+                sleep(0.1)
         return result
 
     def output_for_debug(self,  arrow=False, cmdline=False, silent=False, **payload):
