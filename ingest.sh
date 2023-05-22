@@ -27,3 +27,5 @@ echo Ingesting night $NIGHT to DB $WEAVEIO_DB
 conda run -n weaveio WEAVEIO_USER=$SAVED_WEAVEIO_USER WEAVEIO_PASSWORD=$SAVED_WEAVEIO_PASSWORD python ingest.py $NIGHT
 echo ------------------------------------------------------
 echo Job ends `date`
+echo ------------------------------------------------------
+echo ------------------------------------------------------
